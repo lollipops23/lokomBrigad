@@ -59,7 +59,7 @@ class Window(QWidget):
         self.message_box.setGeometry(50, 500, 300, 50)
         self.message_box.setReadOnly(True)
 
-        photo_path = "photo/Abramovich.jpg"
+        photo_path = "photo/Tirsina.jpg"
         self.photo_pixmap = QPixmap(photo_path)
         self.photo_rect.setPixmap(self.photo_pixmap.scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
 
@@ -75,10 +75,10 @@ class Window(QWidget):
         self.timer_photo = QTimer(self)
         self.timer_photo.timeout.connect(self.take_photo_and_verify)
         self.timer_photo.start(30000)
-
+        
         self.timer_video = QTimer(self)
         self.timer_video.timeout.connect(self.update_frame)
-        self.timer_video.start(60)
+        self.timer_video.start(500)  # изменяем интервал на 2 секунд (15000 миллисекунд)
 
         self.show()
 
@@ -88,41 +88,41 @@ class Window(QWidget):
         if ret:
             cv2.imwrite('temp_frame.jpg', frame)
             img_2 = 'temp_frame.jpg'
-            self.verified = face_verify('photo/Abramovich.jpg', img_2)
+            self.verified = face_verify('photo/Tirsina.jpg', img_2)
             if self.verified:
                 self.photo_rect.setPixmap(self.photo_pixmap.scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
                 self.message_box.append('Проверка пройдена. Пропустить.')
             else:
                 self.message_box.append('Нарушитель! Задержать!!!')
 
-def update_frame(self):
-    ret, frame = self.capture.read()
-    if ret:
-        rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        h, w, ch = rgb_image.shape
-        bytes_per_line = ch * w
+    def update_frame(self):
+        ret, frame = self.capture.read()
+        if ret:
+            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+            faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            
+            # Create a copy of the rgb_image for drawing rectangles and text
+            display_image = rgb_image.copy()
+            
+            for (x, y, w, h) in faces:
+                cv2.rectangle(display_image, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                face_roi = gray_image[y:y+h, x:x+w]
 
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-        faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+                # Convert the single-channel grayscale image to a 3-channel image
+                face_roi_rgb = cv2.merge([face_roi, face_roi, face_roi])
 
-        painter = QPainter(self.photo_pixmap)
-        pen = QPen()
-        pen.setColor(QColor(255, 0, 0))
-        pen.setWidth(2)
-        painter.setPen(pen)
+                emotional_text = detect_dominant_emotion(face_roi_rgb)
+                if emotional_text:
+                    cv2.putText(display_image, ", ".join(emotional_text), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+            
+            convert_to_qt_format = QImage(display_image.data, display_image.shape[1], display_image.shape[0], display_image.strides[0], QImage.Format_RGB888)
+            pixmap = QPixmap.fromImage(convert_to_qt_format)
+            
+            self.camera_rect.setPixmap(pixmap)
 
-        for (x, y, w, h) in faces:
-            painter.drawRect(x, y, w, h)
-            face_roi = gray_image[y:y+h, x:x+w]
-            emotional_text = detect_dominant_emotion(face_roi)
-            if emotional_text:
-                cv2.putText(rgb_image, emotional_text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
-
-        convert_to_qt_format = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
-        pixmap = QPixmap.fromImage(convert_to_qt_format)
-
-        self.camera_rect.setPixmap(pixmap)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
