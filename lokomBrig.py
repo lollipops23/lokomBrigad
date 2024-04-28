@@ -78,8 +78,7 @@ class Window(QWidget):
         
         self.timer_video = QTimer(self)
         self.timer_video.timeout.connect(self.update_frame)
-        self.timer_video.start(500)  # изменяем интервал на 2 секунд (15000 миллисекунд)
-
+        self.timer_video.start(500)
         self.show()
 
     def take_photo_and_verify(self):
@@ -104,14 +103,13 @@ class Window(QWidget):
             gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
             
-            # Create a copy of the rgb_image for drawing rectangles and text
+            
             display_image = rgb_image.copy()
             
             for (x, y, w, h) in faces:
                 cv2.rectangle(display_image, (x, y), (x+w, y+h), (255, 0, 0), 2)
                 face_roi = gray_image[y:y+h, x:x+w]
 
-                # Convert the single-channel grayscale image to a 3-channel image
                 face_roi_rgb = cv2.merge([face_roi, face_roi, face_roi])
 
                 emotional_text = detect_dominant_emotion(face_roi_rgb)
