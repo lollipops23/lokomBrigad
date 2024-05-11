@@ -6,6 +6,8 @@ import cv2
 from deepface import DeepFace
 import json
 import time
+import sqlite3
+
 
 def face_verify(img_1, img_2):
     try:
