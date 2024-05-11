@@ -59,7 +59,7 @@ class Window(QWidget):
         self.message_box.setGeometry(50, 500, 300, 50)
         self.message_box.setReadOnly(True)
 
-        photo_path = "photo/Tirsina.jpg"
+        photo_path = "photo/abr.jpg"
         self.photo_pixmap = QPixmap(photo_path)
         self.photo_rect.setPixmap(self.photo_pixmap.scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
 
@@ -87,7 +87,7 @@ class Window(QWidget):
         if ret:
             cv2.imwrite('temp_frame.jpg', frame)
             img_2 = 'temp_frame.jpg'
-            self.verified = face_verify('photo/Tirsina.jpg', img_2)
+            self.verified = face_verify('photo/abr.jpg', img_2)
             if self.verified:
                 self.photo_rect.setPixmap(self.photo_pixmap.scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
                 self.message_box.append('Проверка пройдена. Пропустить.')
