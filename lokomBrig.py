@@ -9,6 +9,16 @@ import time
 import sqlite3
 
 
+def determine_state(emotions):
+    if "tired" in emotions:
+        return "Усталость"
+    elif "happy" in emotions:
+        return "Норма"
+    elif "sad" in emotions:
+        return "Усталость"
+    else:
+        return "Норма"
+
 def face_verify(img_1, img_2):
     try:
         result_dict = DeepFace.verify(img1_path=img_1, img2_path=img_2)
@@ -57,6 +67,10 @@ class Window(QWidget):
         self.emotion_label.setGeometry(450, 470, 300, 30)
         self.emotion_label.setStyleSheet("color: red; font-size: 16px;")
 
+        self.emotion_label = QLabel(self)
+        self.emotion_label.setGeometry(50, 470, 500, 30)
+        self.emotion_label.setStyleSheet("color: blue; font-size: 16px;")
+        
         self.message_box = QTextEdit(self)
         self.message_box.setGeometry(50, 500, 300, 50)
         self.message_box.setReadOnly(True)
@@ -80,7 +94,7 @@ class Window(QWidget):
         
         self.timer_video = QTimer(self)
         self.timer_video.timeout.connect(self.update_frame)
-        self.timer_video.start(500)
+        self.timer_video.start(200)
         self.show()
 
     def take_photo_and_verify(self):
@@ -105,7 +119,6 @@ class Window(QWidget):
             gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
             
-            
             display_image = rgb_image.copy()
             
             for (x, y, w, h) in faces:
@@ -117,7 +130,11 @@ class Window(QWidget):
                 emotional_text = detect_dominant_emotion(face_roi_rgb)
                 if emotional_text:
                     cv2.putText(display_image, ", ".join(emotional_text), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
-            
+                    
+                    # Определение состояния человека на основе доминирующих эмоций
+                    state = determine_state(emotional_text)
+                    self.emotion_label.setText("Состояние: " + state)
+
             convert_to_qt_format = QImage(display_image.data, display_image.shape[1], display_image.shape[0], display_image.strides[0], QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(convert_to_qt_format)
             
