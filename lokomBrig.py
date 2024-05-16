@@ -8,14 +8,21 @@ import json
 import time
 
 def determine_state(emotions):
-    if "tired" in emotions:
-        return "Усталость"
-    elif "happy" in emotions:
-        return "Норма"
-    elif "sad" in emotions:
-        return "Усталость"
-    else:
-        return "Норма"
+    state_mapping = {
+        "tired": "Усталость",
+        "happy": "Радость",
+        "sad": "Грусть",
+        "neutral": "Спокойствие"
+    }
+    
+    if not emotions:
+        return "В кадре нет лица"
+    
+    for emotion in emotions:
+        if emotion in state_mapping:
+            return state_mapping[emotion]
+    
+    return "Неопределенное состояние"
 
 def face_verify(img_1, img_2):
     try:
@@ -122,7 +129,6 @@ class Window(QWidget):
             for (x, y, w, h) in faces:
                 cv2.rectangle(display_image, (x, y), (x+w, y+h), (255, 0, 0), 2)
                 face_roi = gray_image[y:y+h, x:x+w]
-
                 face_roi_rgb = cv2.merge([face_roi, face_roi, face_roi])
 
                 emotional_text = detect_dominant_emotion(face_roi_rgb)
@@ -132,6 +138,9 @@ class Window(QWidget):
                     # Определение состояния человека на основе доминирующих эмоций
                     state = determine_state(emotional_text)
                     self.emotion_label.setText("Состояние: " + state)
+
+                else:
+                    self.emotion_label.setText("Лицо не обнаружено")
 
             convert_to_qt_format = QImage(display_image.data, display_image.shape[1], display_image.shape[0], display_image.strides[0], QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(convert_to_qt_format)
