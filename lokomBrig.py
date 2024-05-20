@@ -142,10 +142,12 @@ class Window(QWidget):
         ret, frame = self.capture.read()
         if ret:
             cv2.imwrite('temp_frame.jpg', frame)
-            img_2 = 'temp_frame.jpg'
-            self.verified = face_verify('photo/abr.jpg', img_2)
+            
+            selected_photo_path = self.driver_combo.currentData()
+            
+            self.verified = face_verify(selected_photo_path, 'temp_frame.jpg')  # Сравнение выбранного изображения из базы данных сфото с камеры
             if self.verified:
-                self.photo_rect.setPixmap(self.photo_pixmap.scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
+                self.photo_rect.setPixmap(QPixmap(selected_photo_path).scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
                 self.message_box.append('Проверка пройдена. Пропустить.')
             else:
                 self.message_box.append('Нарушитель! Задержать!!!')
@@ -171,10 +173,10 @@ class Window(QWidget):
                     cv2.putText(display_image, ", ".join(emotional_text), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
                     
                     state = determine_state(emotional_text)
-                    self.emotion_label_camera.setText("Состояние: " + state)
+                    self.emotion_label.setText("Состояние: " + state)
 
                 else:
-                    self.emotion_label_camera.setText("Лицо не обнаружено")
+                    self.emotion_label.setText("Лицо не обнаружено")
 
             convert_to_qt_format = QImage(display_image.data, display_image.shape[1], display_image.shape[0], display_image.strides[0], QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(convert_to_qt_format)
