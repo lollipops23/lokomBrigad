@@ -83,10 +83,13 @@ class Window(QWidget):
             cursor = conn.cursor()
             cursor.execute("SELECT name, image_driv FROM driv_info")
             rows = cursor.fetchall()
+            self.driver_combo.addItem("Не выбран пользователь")
+            
 
             for row in rows:
                 name, photo_path = row
                 self.driver_combo.addItem(name, userData=photo_path)
+                
 
         self.driver_combo.currentIndexChanged.connect(self.display_selected_driver_image)
 
@@ -187,4 +190,4 @@ class Window(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Window()
-    sys.exit(app.exec_())
+    sys.exit(app.exec_()) 
