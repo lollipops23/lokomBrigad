@@ -1,6 +1,5 @@
 import sqlite3 as sq
 
-# Создание таблицы "Mach" в базе данных "driver.db"
 with sq.connect('driver.db') as conn:
     cursor = conn.cursor()
     cursor.execute("""CREATE TABLE driv_info(
@@ -8,27 +7,32 @@ with sq.connect('driver.db') as conn:
         name TEXT NOT NULL,
         age INTEGER,
         sex TEXT CHECK(sex IN ('M', 'F')),
-        izo BLOB,
-        data TEXT,
-        smena TEXT
+        image_driv BLOB
     )""")
-
 
     cursor.execute("""CREATE TABLE face(
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         machine_ID INTEGER,
-        izo BLOB,
-        time TIMESTAMP
-        data TEXT,
-        )""")
+        image_contol BLOB,
+        time TEXT,
+        date TEXT,
+        control TEXT CHECK(control IN ('прошел', 'не прошел'))
+    )""")
 
-    cursor.execute("INSERT INTO driv_info (id, name, age, sex, data, smena) VALUES (1, 'Eugene', 18, 'M', 'aye', 'smena')")
-    cursor.execute("INSERT INTO driv_info (id, name, age, sex, data, smena) VALUES (2, 'Eugene', 19, 'F', 'aye', 'smena')")
-    cursor.execute("INSERT INTO face(ID, machine_ID, izo, time) VALUES (3,1,2,1500)")
-    with sq.connect('driver.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM driv")
-        rows = cursor.fetchall()
+    cursor.execute("INSERT INTO driv_info (name, age, sex, image_driv) VALUES ('Abramovich Eugene', 19, 'M', 'photo/Abramovich.jpg')")
+    cursor.execute("INSERT INTO driv_info (name, age, sex, image_driv) VALUES ('Tirsina Ekaterina', 20, 'F', 'photo/Tirsina.jpg')")
+    cursor.execute("INSERT INTO face(machine_ID, image_contol, time, date, control) VALUES (1, 'control_image', '10:30:00', '2024-05-16', 'прошел')")
 
-        for row in rows:
-            print(row)
+with sq.connect('driver.db') as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM driv_info")
+    rows = cursor.fetchall()
+
+    for row in rows:
+        print(row)
+
+    cursor.execute("SELECT * FROM face")
+    rows = cursor.fetchall()
+
+    for row in rows:
+        print(row)

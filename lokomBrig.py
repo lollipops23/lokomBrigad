@@ -1,13 +1,12 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit, QComboBox, QVBoxLayout
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtCore import Qt, QTimer, QRect
 import cv2
 from deepface import DeepFace
 import json
 import time
 import sqlite3
-
 
 def determine_state(emotions):
     state_mapping = {
@@ -61,6 +60,35 @@ class Window(QWidget):
 
         self.setWindowTitle("Идентификация")
         self.setGeometry(100, 100, 1200, 700)
+        
+        # Выпадающий список
+        layout = QVBoxLayout()
+
+        self.driver_combo = QComboBox(self)
+        
+        self.photo_rect = QRect(0, 0, 300, 400)
+        combo_width = self.photo_rect.width()
+        self.driver_combo.setFixedWidth(combo_width)
+        self.driver_combo.setStyleSheet(f"QComboBox {{ width: {combo_width}px; }}")
+        
+        layout.addWidget(self.driver_combo)
+
+        self.image_label = QLabel(self)
+        layout.addWidget(self.image_label)
+
+        self.setLayout(layout)
+
+        # Заполнение выпадающего списка
+        with sqlite3.connect('driver.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name, image_driv FROM driv_info")
+            rows = cursor.fetchall()
+
+            for row in rows:
+                name, photo_path = row
+                self.driver_combo.addItem(name, userData=photo_path)
+
+        self.driver_combo.currentIndexChanged.connect(self.display_selected_driver_image)
 
         self.photo_rect = QLabel(self)
         self.photo_rect.setGeometry(50, 50, 300, 400)
@@ -104,6 +132,11 @@ class Window(QWidget):
         self.timer_video.start(200)
         self.show()
 
+    def display_selected_driver_image(self, index):
+        selected_photo_path = self.driver_combo.currentData()
+        pixmap = QPixmap(selected_photo_path)
+        self.photo_rect.setPixmap(pixmap.scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
+
     def take_photo_and_verify(self):
         self.last_photo_time = time.time()
         ret, frame = self.capture.read()
@@ -137,12 +170,11 @@ class Window(QWidget):
                 if emotional_text:
                     cv2.putText(display_image, ", ".join(emotional_text), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
                     
-                    # Определение состояния человека на основе доминирующих эмоций
                     state = determine_state(emotional_text)
-                    self.emotion_label.setText("Состояние: " + state)
+                    self.emotion_label_camera.setText("Состояние: " + state)
 
                 else:
-                    self.emotion_label.setText("Лицо не обнаружено")
+                    self.emotion_label_camera.setText("Лицо не обнаружено")
 
             convert_to_qt_format = QImage(display_image.data, display_image.shape[1], display_image.shape[0], display_image.strides[0], QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(convert_to_qt_format)
