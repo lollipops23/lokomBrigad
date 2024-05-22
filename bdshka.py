@@ -21,7 +21,6 @@ with sq.connect('driver.db') as conn:
 
     cursor.execute("INSERT INTO driv_info (name, age, sex, image_driv) VALUES ('Abramovich Eugene', 19, 'M', 'photo/Abramovich.jpg')")
     cursor.execute("INSERT INTO driv_info (name, age, sex, image_driv) VALUES ('Tirsina Ekaterina', 20, 'F', 'photo/Tirsina.jpg')")
-    cursor.execute("INSERT INTO face(machine_ID, image_contol, time, date, control) VALUES (1, 'control_image', '10:30:00', '2024-05-16', 'прошел')")
 
 with sq.connect('driver.db') as conn:
     cursor = conn.cursor()

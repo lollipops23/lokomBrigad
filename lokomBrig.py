@@ -60,8 +60,7 @@ class Window(QWidget):
 
         self.setWindowTitle("Идентификация")
         self.setGeometry(100, 100, 1200, 700)
-        
-        # Выпадающий список
+
         layout = QVBoxLayout()
 
         self.driver_combo = QComboBox(self)
@@ -70,6 +69,7 @@ class Window(QWidget):
         combo_width = self.photo_rect.width()
         self.driver_combo.setFixedWidth(combo_width)
         self.driver_combo.setStyleSheet(f"QComboBox {{ width: {combo_width}px; }}")
+        self.driver_combo.addItem("Не выбран пользователь")
         
         layout.addWidget(self.driver_combo)
 
@@ -78,18 +78,14 @@ class Window(QWidget):
 
         self.setLayout(layout)
 
-        # Заполнение выпадающего списка
         with sqlite3.connect('driver.db') as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT name, image_driv FROM driv_info")
             rows = cursor.fetchall()
-            self.driver_combo.addItem("Не выбран пользователь")
-            
 
             for row in rows:
                 name, photo_path = row
                 self.driver_combo.addItem(name, userData=photo_path)
-                
 
         self.driver_combo.currentIndexChanged.connect(self.display_selected_driver_image)
 
@@ -144,12 +140,30 @@ class Window(QWidget):
         self.last_photo_time = time.time()
         ret, frame = self.capture.read()
         if ret:
-            cv2.imwrite('temp_frame.jpg', frame)
+            current_timestamp = int(time.time())  
+            photo_filename = f'Photo_aunt/temp_frame_{current_timestamp}.jpg' 
+            
+            cv2.imwrite(photo_filename, frame) 
             
             selected_photo_path = self.driver_combo.currentData()
+
+            verified = face_verify(selected_photo_path, photo_filename) 
+
+            current_time = time.strftime("%H:%M:%S", time.localtime())
+            current_date = time.strftime("%Y-%m-%d", time.localtime())
+
+            control_status = "прошел" if verified else "не прошел"
+
+            with sqlite3.connect('driver.db') as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute("""INSERT INTO face(machine_ID, image_contol, time, date, control)
+                                VALUES (?, ?, ?, ?, ?)""",
+                                (int(self.driver_combo.currentIndex()), photo_filename, current_time, current_date, control_status))
+                conn.commit()
+
             
-            self.verified = face_verify(selected_photo_path, 'temp_frame.jpg')  
-            if self.verified:
+            if verified:
                 self.photo_rect.setPixmap(QPixmap(selected_photo_path).scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
                 self.message_box.append('Проверка пройдена. Пропустить.')
             else:
@@ -190,4 +204,4 @@ class Window(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Window()
-    sys.exit(app.exec_()) 
+    sys.exit(app.exec_())
