@@ -145,7 +145,7 @@ class Window(QWidget):
             
             selected_photo_path = self.driver_combo.currentData()
             
-            self.verified = face_verify(selected_photo_path, 'temp_frame.jpg')  # Сравнение выбранного изображения из базы данных сфото с камеры
+            self.verified = face_verify(selected_photo_path, 'temp_frame.jpg')  
             if self.verified:
                 self.photo_rect.setPixmap(QPixmap(selected_photo_path).scaled(self.photo_rect.size(), Qt.KeepAspectRatio))
                 self.message_box.append('Проверка пройдена. Пропустить.')
