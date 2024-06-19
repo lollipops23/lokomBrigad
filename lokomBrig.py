@@ -152,14 +152,20 @@ class Window(QWidget):
             current_time = time.strftime("%H:%M:%S", time.localtime())
             current_date = time.strftime("%Y-%m-%d", time.localtime())
 
+            dom_emotion = "Не обнаружено"
+            if verified:
+                face_roi_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                dom_emotion = detect_dominant_emotion(face_roi_rgb)
+                dom_emotion = ', '.join(dom_emotion) if dom_emotion else "Не обнаружено"
+            
             control_status = "прошел" if verified else "не прошел"
 
             with sqlite3.connect('driver.db') as conn:
                 cursor = conn.cursor()
                 
-                cursor.execute("""INSERT INTO face(machine_ID, image_contol, time, date, control)
-                                VALUES (?, ?, ?, ?, ?)""",
-                                (int(self.driver_combo.currentIndex()), photo_filename, current_time, current_date, control_status))
+                cursor.execute("""INSERT INTO face(machine_ID, image_contol, time, date, control, dom_emotion)
+                                VALUES (?, ?, ?, ?, ?, ?)""",
+                                (int(self.driver_combo.currentIndex()), photo_filename, current_time, current_date, control_status, dom_emotion))
                 conn.commit()
 
             

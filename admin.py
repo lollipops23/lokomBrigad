@@ -1,8 +1,9 @@
 import sys
 import sqlite3
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QPixmap
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 class FaceRecordsApp(QWidget):
     def __init__(self):
@@ -25,6 +26,10 @@ class FaceRecordsApp(QWidget):
         self.display_face_records()
 
         self.table.cellClicked.connect(self.show_image)
+        
+        btn_show_emotions_chart = QPushButton('График эмоций')
+        btn_show_emotions_chart.clicked.connect(self.show_emotions_chart)
+        layout.addWidget(btn_show_emotions_chart)
 
     def display_face_records(self):
         with sqlite3.connect('driver.db') as conn:
@@ -61,7 +66,40 @@ class FaceRecordsApp(QWidget):
         self.image_window.setLayout(image_layout)
         self.image_window.setWindowTitle('Фото с камеры')
         self.image_window.show()
+    
+    def show_emotions_chart(self):
+        with sqlite3.connect('driver.db') as conn:
+            cursor = conn.cursor()
 
+            cursor.execute("SELECT name, dom_emotion, time FROM face INNER JOIN driv_info ON face.machine_ID = driv_info.id")
+            rows = cursor.fetchall()
+
+            driver_emotions = {}
+
+            for row in rows:
+                driver_name = row[0]
+                emotion = row[1]
+                time = row[2]
+
+                if driver_name not in driver_emotions:
+                    driver_emotions[driver_name] = {"times": [], "emotions": []}
+
+                driver_emotions[driver_name]["times"].append(time)
+                driver_emotions[driver_name]["emotions"].append(emotion)
+
+            for driver, data in driver_emotions.items():
+                times = data["times"]
+                emotions = data["emotions"]
+
+                plt.figure()
+                plt.plot(times, emotions, marker='o', label=driver)
+                plt.xlabel('Время')
+                plt.ylabel('Эмоции')
+                plt.title(f'Эмоции {driver}')
+                plt.legend()
+                plt.grid(True)
+
+            plt.show()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -16,14 +16,13 @@ with sq.connect('driver.db') as conn:
         image_contol BLOB,
         time TEXT,
         date TEXT,
-        control TEXT CHECK(control IN ('прошел', 'не прошел'))
+        control TEXT CHECK(control IN ('прошел', 'не прошел')),
+        dom_emotion TEXT
     )""")
 
     cursor.execute("INSERT INTO driv_info (name, age, sex, image_driv) VALUES ('Abramovich Eugene', 19, 'M', 'photo/Abramovich.jpg')")
     cursor.execute("INSERT INTO driv_info (name, age, sex, image_driv) VALUES ('Tirsina Ekaterina', 20, 'F', 'photo/Tirsina.jpg')")
 
-with sq.connect('driver.db') as conn:
-    cursor = conn.cursor()
     cursor.execute("SELECT * FROM driv_info")
     rows = cursor.fetchall()
 
